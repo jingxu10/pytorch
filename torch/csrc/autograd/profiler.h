@@ -102,6 +102,7 @@ enum class TORCH_API ProfilerState {
     CPU, // CPU-only profiling
     CUDA, // CPU + CUDA events
     NVTX,  // only emit NVTX markers
+    ITT, // only emit ITT markers
 };
 
 struct TORCH_API ProfilerConfig {

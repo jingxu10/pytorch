@@ -177,6 +177,14 @@ else()
       -Wno-write-strings
       -Wno-strict-aliasing)
 endif()
+ 
+list(APPEND TORCH_PYTHON_SRCS
+    ${TORCH_SRC_DIR}/csrc/intel/itt.cpp
+	)
+set(ITT_ROOT_DIR "/opt/intel/inteloneapi/vtune/2021.1-beta02")
+message(STATUS "ITT_ROOT_DIR: ${ITT_ROOT_DIR}")
+list(APPEND TORCH_PYTHON_LINK_LIBRARIES ${ITT_ROOT_DIR}/lib64/libittnotify.a)
+list(APPEND TORCH_PYTHON_INCLUDE_DIRECTORIES "${ITT_ROOT_DIR}/include")
 
 if(USE_CUDA)
     list(APPEND TORCH_PYTHON_SRCS

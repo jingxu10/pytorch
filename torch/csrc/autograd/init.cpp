@@ -38,7 +38,8 @@ PyObject* THPAutograd_initExtension(PyObject* _unused, PyObject *unused) {
       .value("Disabled", ProfilerState::Disabled)
       .value("CPU", ProfilerState::CPU)
       .value("CUDA", ProfilerState::CUDA)
-      .value("NVTX", ProfilerState::NVTX);
+      .value("NVTX", ProfilerState::NVTX)
+      .value("ITT", ProfilerState::ITT);
 
   py::class_<ProfilerConfig>(m, "ProfilerConfig")
       .def(py::init<ProfilerState, bool>());
