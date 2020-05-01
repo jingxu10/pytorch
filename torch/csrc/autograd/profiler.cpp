@@ -3,7 +3,7 @@
 #include <torch/csrc/jit/frontend/code_template.h>
 
 #include <torch/csrc/jit/runtime/operator.h>
-#include <torch/csrc/intel/itt.h>
+#include <torch/csrc/autograd/profiler_itt.h>
 
 #include <ATen/core/op_registration/op_registration.h>
 
@@ -57,7 +57,7 @@ void mark(std::string name, bool include_cuda /* = true */) {
   if (state == ProfilerState::NVTX) {
     cuda_stubs->nvtxMarkA(name.c_str());
   } else if (state == ProfilerState::ITT) {
-	  torch::intel::itt_mark(name.c_str());
+	torch::intel::itt_mark(name.c_str());
   } else {
     getEventList().record(
         EventKind::Mark,

@@ -47,7 +47,6 @@
 #include <torch/csrc/onnx/init.h>
 #include <torch/csrc/utils/init.h>
 #include <torch/csrc/api/include/torch/python/init.h>
-#include <torch/csrc/intel/itt.h>
 
 #ifdef USE_DISTRIBUTED
 #ifdef USE_C10D
@@ -592,9 +591,9 @@ void initModule(PyObject *module);
 }} // namespace torch::cuda
 #endif
 
-// namespace torch { namespace intel {
-// void initIttBindings(PyObject *module);
-// }} // namespace torch::intel
+namespace torch { namespace intel {
+void initIttBindings(PyObject *module);
+}} // namespace torch::intel
 
 bool THDPDoubleStorage_init(PyObject *module);
 bool THDPFloatStorage_init(PyObject *module);

@@ -421,6 +421,10 @@ if(NOT INTERN_BUILD_MOBILE OR NOT BUILD_CAFFE2_MOBILE)
     endif()
   endif()
 
+  list(APPEND TORCH_SRCS ${TORCH_SRC_DIR}/csrc/autograd/profiler_itt.cpp)
+  list(APPEND Caffe2_DEPENDENCY_INCLUDE "/opt/intel/inteloneapi/vtune/2021.1-beta02/include")
+  list(APPEND Caffe2_DEPENDENCY_LIBS "/opt/intel/inteloneapi/vtune/2021.1-beta02/lib64/libittnotify.a")
+
   if(USE_CUDA)
     list(APPEND Caffe2_GPU_SRCS
       ${TORCH_SRC_DIR}/csrc/jit/codegen/fuser/cuda/fused_kernel.cpp

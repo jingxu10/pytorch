@@ -1,26 +1,7 @@
-#include <iostream>
 #include <torch/csrc/utils/pybind.h>
-
-#include "ittnotify.h"
+#include <torch/csrc/autograd/profiler_itt.h>
 
 namespace torch { namespace intel {
-__itt_domain* __itt_domain = __itt_domain_create("PyTorch");
-
-void itt_range_push(const char* msg) {
-	__itt_string_handle* hsMsg = __itt_string_handle_create(msg);
-	__itt_task_begin(__itt_domain, __itt_null, __itt_null, hsMsg);
-}
-
-void itt_range_pop() {
-	__itt_task_end(__itt_domain);
-}
-
-void itt_mark(const char* msg) {
-	__itt_string_handle* hsMsg = __itt_string_handle_create(msg);
-	__itt_task_begin(__itt_domain, __itt_null, __itt_null, hsMsg);
-	__itt_task_end(__itt_domain);
-}
-
 void initIttBindings(PyObject* module) {
   auto m = py::handle(module).cast<py::module>();
 

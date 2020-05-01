@@ -143,6 +143,7 @@ set(TORCH_PYTHON_INCLUDE_DIRECTORIES
     ${pybind11_INCLUDE_DIRS}
 
     ${TORCH_SRC_DIR}/csrc
+    ${TORCH_SRC_DIR}/csrc/intel
     ${TORCH_SRC_DIR}/csrc/api/include
     ${TORCH_SRC_DIR}/lib
     )
@@ -179,8 +180,9 @@ else()
 endif()
  
 list(APPEND TORCH_PYTHON_SRCS
-    ${TORCH_SRC_DIR}/csrc/intel/itt.cpp
-	)
+  ${TORCH_SRC_DIR}/csrc/autograd/profiler_itt.cpp
+  ${TORCH_SRC_DIR}/csrc/intel/itt.cpp
+)
 set(ITT_ROOT_DIR "/opt/intel/inteloneapi/vtune/2021.1-beta02")
 message(STATUS "ITT_ROOT_DIR: ${ITT_ROOT_DIR}")
 list(APPEND TORCH_PYTHON_LINK_LIBRARIES ${ITT_ROOT_DIR}/lib64/libittnotify.a)
