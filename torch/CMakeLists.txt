@@ -178,15 +178,16 @@ else()
       -Wno-write-strings
       -Wno-strict-aliasing)
 endif()
- 
-list(APPEND TORCH_PYTHON_SRCS
-  ${TORCH_SRC_DIR}/csrc/autograd/profiler_itt.cpp
-  ${TORCH_SRC_DIR}/csrc/intel/itt.cpp
-)
-set(ITT_ROOT_DIR "/opt/intel/inteloneapi/vtune/2021.1-beta02")
-message(STATUS "ITT_ROOT_DIR: ${ITT_ROOT_DIR}")
-list(APPEND TORCH_PYTHON_LINK_LIBRARIES ${ITT_ROOT_DIR}/lib64/libittnotify.a)
-list(APPEND TORCH_PYTHON_INCLUDE_DIRECTORIES "${ITT_ROOT_DIR}/include")
+
+if(NOT ${USE_ITT} STREQUAL "None")
+  list(APPEND TORCH_PYTHON_SRCS
+    ${TORCH_SRC_DIR}/csrc/intel/itt_wrapper.cpp
+    ${TORCH_SRC_DIR}/csrc/intel/itt.cpp
+  )
+  list(APPEND TORCH_PYTHON_INCLUDE_DIRECTORIES "${USE_ITT}/include")
+  list(APPEND TORCH_PYTHON_LINK_LIBRARIES "${USE_ITT}/lib64/libittnotify.a")
+  list(APPEND TORCH_PYTHON_COMPILE_DEFINITIONS USE_ITT)
+endif()
 
 if(USE_CUDA)
     list(APPEND TORCH_PYTHON_SRCS

@@ -1,31 +1,33 @@
-// #include <torch/csrc/utils/pybind.h>
+#include <torch/csrc/autograd/profiler.h>
+#include <torch/csrc/intel/itt_wrapper.h>
 
-#include "ittnotify.h"
+namespace torch { namespace autograd { namespace profiler {
 
-namespace torch { namespace intel {
-__itt_domain* _itt_domain = __itt_domain_create("PyTorch");
+namespace {
+struct ITTMethods : public ITTStubs {
+  void ittMark(const char* name) override {
+	torch::intel::itt_mark(name);
+  }
+  void ittRangePush(const char* name) override {
+    torch::intel::itt_range_push(name);
+  }
+  void ittRangePop() override {
+    torch::intel::itt_range_pop();
+  }
+  bool enabled() override {
+    return true;
+  }
+};
 
-void itt_range_push(const char* msg) {
-	__itt_string_handle* hsMsg = __itt_string_handle_create(msg);
-	__itt_task_begin(_itt_domain, __itt_null, __itt_null, hsMsg);
-}
+struct RegisterITTMethods {
+  RegisterITTMethods() {
+    static ITTMethods methods;
+    registerITTMethods(&methods);
+  }
+};
+RegisterITTMethods reg;
 
-void itt_range_pop() {
-	__itt_task_end(_itt_domain);
-}
-
-void itt_mark(const char* msg) {
-	__itt_string_handle* hsMsg = __itt_string_handle_create(msg);
-	__itt_task_begin(_itt_domain, __itt_null, __itt_null, hsMsg);
-	__itt_task_end(_itt_domain);
-}
-
-// void initIttBindings(PyObject* module) {
-//   auto m = py::handle(module).cast<py::module>();
-//
-//   auto itt = m.def_submodule("_itt", "VTune ITT bindings");
-//   itt.def("rangePush", itt_range_push);
-//   itt.def("rangePop", itt_range_pop);
-//   itt.def("mark", itt_mark);
-// }
-}} // namespace torch::intel
+} // namespaces
+} // namespace profiler
+} // namespace autograd
+} // namespace torch

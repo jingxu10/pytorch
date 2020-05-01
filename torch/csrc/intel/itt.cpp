@@ -1,5 +1,5 @@
 #include <torch/csrc/utils/pybind.h>
-#include <torch/csrc/autograd/profiler_itt.h>
+#include <torch/csrc/intel/itt_wrapper.h>
 
 namespace torch { namespace intel {
 void initIttBindings(PyObject* module) {

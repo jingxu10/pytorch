@@ -421,9 +421,14 @@ if(NOT INTERN_BUILD_MOBILE OR NOT BUILD_CAFFE2_MOBILE)
     endif()
   endif()
 
-  list(APPEND TORCH_SRCS ${TORCH_SRC_DIR}/csrc/autograd/profiler_itt.cpp)
-  list(APPEND Caffe2_DEPENDENCY_INCLUDE "/opt/intel/inteloneapi/vtune/2021.1-beta02/include")
-  list(APPEND Caffe2_DEPENDENCY_LIBS "/opt/intel/inteloneapi/vtune/2021.1-beta02/lib64/libittnotify.a")
+  if(NOT ${USE_ITT} STREQUAL "None")
+    message(STATUS "USE_ITT: ${USE_ITT}")
+    list(APPEND TORCH_SRCS
+      ${TORCH_SRC_DIR}/csrc/intel/itt_wrapper.cpp
+      ${TORCH_SRC_DIR}/csrc/autograd/profiler_itt.cpp)
+    list(APPEND Caffe2_DEPENDENCY_INCLUDE "${USE_ITT}/include")
+    list(APPEND Caffe2_DEPENDENCY_LIBS "${USE_ITT}/lib64/libittnotify.a")
+  endif()
 
   if(USE_CUDA)
     list(APPEND Caffe2_GPU_SRCS

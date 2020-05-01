@@ -61,6 +61,28 @@ private:
 
 TORCH_API void registerCUDAMethods(CUDAStubs* stubs);
 
+struct TORCH_API ITTStubs {
+  virtual void ittMark(const char* name) {
+    fail();
+  }
+  virtual void ittRangePush(const char* name) {
+    fail();
+  }
+  virtual void ittRangePop() {
+    fail();
+  }
+  virtual bool enabled() {
+    return false;
+  }
+
+private:
+  void fail() {
+    AT_ERROR("ITT used in profiler but not enabled.");
+  }
+};
+
+TORCH_API void registerITTMethods(ITTStubs* stubs);
+
 constexpr inline size_t ceilToMultiple(size_t a, size_t b) {
   return ((a + b - 1) / b) * b;
 }

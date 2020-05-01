@@ -3,7 +3,6 @@
 #include <torch/csrc/jit/frontend/code_template.h>
 
 #include <torch/csrc/jit/runtime/operator.h>
-#include <torch/csrc/autograd/profiler_itt.h>
 
 #include <ATen/core/op_registration/op_registration.h>
 
@@ -18,11 +17,17 @@ namespace torch { namespace autograd { namespace profiler {
 
 namespace {
 
-CUDAStubs default_stubs;
-constexpr CUDAStubs* default_stubs_addr = &default_stubs;
+CUDAStubs default_cuda_stubs;
+constexpr CUDAStubs* default_cuda_stubs_addr = &default_cuda_stubs;
 // constant initialization, so it is guaranteed to be initialized before
 // static initialization calls which may invoke registerCUDAMethods
-static CUDAStubs* cuda_stubs = default_stubs_addr;
+static CUDAStubs* cuda_stubs = default_cuda_stubs_addr;
+
+ITTStubs default_itt_stubs;
+constexpr ITTStubs* default_itt_stubs_addr = &default_itt_stubs;
+// constant initialization, so it is guaranteed to be initialized before
+// static initialization calls which may invoke registerITTMethods
+static ITTStubs* itt_stubs = default_itt_stubs_addr;
 
 ProfilerState state = ProfilerState::Disabled;
 // Protects access all_event_lists_map.
@@ -36,6 +41,10 @@ thread_local uint16_t thread_id;
 
 void registerCUDAMethods(CUDAStubs* stubs) {
   cuda_stubs = stubs;
+}
+
+void registerITTMethods(ITTStubs* stubs) {
+  itt_stubs = stubs;
 }
 
 ProfilerConfig::~ProfilerConfig() = default;
@@ -57,7 +66,7 @@ void mark(std::string name, bool include_cuda /* = true */) {
   if (state == ProfilerState::NVTX) {
     cuda_stubs->nvtxMarkA(name.c_str());
   } else if (state == ProfilerState::ITT) {
-	torch::intel::itt_mark(name.c_str());
+	itt_stubs->ittMark(name.c_str());
   } else {
     getEventList().record(
         EventKind::Mark,
@@ -108,7 +117,7 @@ void pushRange(
       cuda_stubs->nvtxRangePushA(name.str());
     }
   } else if (state == ProfilerState::ITT) {
-	  torch::intel::itt_range_push(name.str());
+      itt_stubs->ittRangePush(name.str());
   } else {
     getEventList().record(
         EventKind::PushRange,
@@ -126,7 +135,7 @@ void popRange() {
   if (state == ProfilerState::NVTX) {
     cuda_stubs->nvtxRangePop();
   } else if (state == ProfilerState::ITT) {
-	  torch::intel::itt_range_pop();
+    itt_stubs->ittRangePop();
   } else {
     getEventList().record(
         EventKind::PopRange,
@@ -141,6 +150,8 @@ void enableProfiler(ProfilerConfig config) {
   AT_ASSERT(new_state != ProfilerState::Disabled);
   if (new_state == ProfilerState::NVTX && !cuda_stubs->enabled())
     throw std::runtime_error("Can't use NVTX profiler - PyTorch was compiled without CUDA");
+  if (new_state == ProfilerState::ITT && !itt_stubs->enabled())
+    throw std::runtime_error("Can't use Intel(R) VTune Profiler's ITT functionality - PyTorch was compiled without ITT");
   if (state != ProfilerState::Disabled && new_state != state) {
     throw std::runtime_error("can't change kind of profiling (e.g. NVTX to CPU) while profiler is running");
   }

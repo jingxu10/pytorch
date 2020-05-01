@@ -591,9 +591,11 @@ void initModule(PyObject *module);
 }} // namespace torch::cuda
 #endif
 
+#ifdef USE_ITT
 namespace torch { namespace intel {
 void initIttBindings(PyObject *module);
 }} // namespace torch::intel
+#endif
 
 bool THDPDoubleStorage_init(PyObject *module);
 bool THDPFloatStorage_init(PyObject *module);
@@ -683,7 +685,9 @@ PyObject* initModule() {
   torch::autograd::initNNFunctions(module);
   torch::autograd::init_legacy_variable(module);
   torch::python::init_bindings(module);
+#ifdef USE_ITT
   torch::intel::initIttBindings(module);
+#endif
 #ifdef USE_CUDA
   torch::cuda::initModule(module);
 #endif
