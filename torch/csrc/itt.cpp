@@ -1,7 +1,7 @@
 #include <torch/csrc/utils/pybind.h>
-#include <torch/csrc/intel/itt_wrapper.h>
+#include <torch/csrc/itt_wrapper.h>
 
-namespace torch { namespace intel {
+namespace torch {
 void initIttBindings(PyObject* module) {
   auto m = py::handle(module).cast<py::module>();
 
@@ -10,4 +10,4 @@ void initIttBindings(PyObject* module) {
   itt.def("rangePop", itt_range_pop);
   itt.def("mark", itt_mark);
 }
-}} // namespace torch::intel
+} // namespace torch

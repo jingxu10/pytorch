@@ -1,18 +1,18 @@
 #include <torch/csrc/autograd/profiler.h>
-#include <torch/csrc/intel/itt_wrapper.h>
+#include <torch/csrc/itt_wrapper.h>
 
 namespace torch { namespace autograd { namespace profiler {
 
 namespace {
 struct ITTMethods : public ITTStubs {
   void ittMark(const char* name) override {
-	torch::intel::itt_mark(name);
+	torch::itt_mark(name);
   }
   void ittRangePush(const char* name) override {
-    torch::intel::itt_range_push(name);
+    torch::itt_range_push(name);
   }
   void ittRangePop() override {
-    torch::intel::itt_range_pop();
+    torch::itt_range_pop();
   }
   bool enabled() override {
     return true;

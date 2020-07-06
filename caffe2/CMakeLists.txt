@@ -424,7 +424,7 @@ if(NOT INTERN_BUILD_MOBILE OR NOT BUILD_CAFFE2_MOBILE)
   if(NOT ${USE_ITT} STREQUAL "None")
     message(STATUS "USE_ITT: ${USE_ITT}")
     list(APPEND TORCH_SRCS
-      ${TORCH_SRC_DIR}/csrc/intel/itt_wrapper.cpp
+      ${TORCH_SRC_DIR}/csrc/itt_wrapper.cpp
       ${TORCH_SRC_DIR}/csrc/autograd/profiler_itt.cpp)
     list(APPEND Caffe2_DEPENDENCY_INCLUDE "${USE_ITT}/include")
     list(APPEND Caffe2_DEPENDENCY_LIBS "${USE_ITT}/lib64/libittnotify.a")

@@ -143,7 +143,6 @@ set(TORCH_PYTHON_INCLUDE_DIRECTORIES
     ${pybind11_INCLUDE_DIRS}
 
     ${TORCH_SRC_DIR}/csrc
-    ${TORCH_SRC_DIR}/csrc/intel
     ${TORCH_SRC_DIR}/csrc/api/include
     ${TORCH_SRC_DIR}/lib
     )
@@ -181,8 +180,8 @@ endif()
 
 if(NOT ${USE_ITT} STREQUAL "None")
   list(APPEND TORCH_PYTHON_SRCS
-    ${TORCH_SRC_DIR}/csrc/intel/itt_wrapper.cpp
-    ${TORCH_SRC_DIR}/csrc/intel/itt.cpp
+    ${TORCH_SRC_DIR}/csrc/itt_wrapper.cpp
+    ${TORCH_SRC_DIR}/csrc/itt.cpp
   )
   list(APPEND TORCH_PYTHON_INCLUDE_DIRECTORIES "${USE_ITT}/include")
   list(APPEND TORCH_PYTHON_LINK_LIBRARIES "${USE_ITT}/lib64/libittnotify.a")
