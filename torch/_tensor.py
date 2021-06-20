@@ -374,7 +374,11 @@ class Tensor(torch._C._TensorBase):
                 if grad.is_sparse:
                     var._grad = grad.clone()
                 else:
-                    var._grad = grad.clone(memory_format=torch.contiguous_format)
+                    if grad.layout == torch._mkldnn:
+                        from torch.utils import mkldnn as mkldnn_utils
+                        var._grad = grad.to_dense().clone(memory_format=torch.contiguous_format).to_mkldnn()
+                    else:
+                        var._grad = grad.clone(memory_format=torch.contiguous_format)
             else:
                 var._grad = var._grad + grad
 

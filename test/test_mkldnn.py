@@ -354,6 +354,47 @@ class TestMkldnn(TestCase):
     def test_relu_inplace_bf16(self):
         self._test_relu_bf16_base("relu_")
 
+    def test_prelu(self):
+        x = torch.randn((16, 64, 112, 112), dtype=torch.float32)
+        d = torch.randn((16, 64, 112, 112), dtype=torch.float32)
+
+        x1 = x.clone()
+        x2 = x.clone().to_mkldnn()
+        m1 = torch.nn.PReLU()
+        m2 = mkldnn_utils.to_mkldnn(copy.deepcopy(m1))
+        y1 = m1(x1)
+        y2 = m2(x2)
+        y1.backward(d)
+        y2.backward(d.to_mkldnn())
+        self.assertEqual(y1, y2.to_dense())
+        self.assertEqual(x1.grad, x2.grad.to_dense())
+
+        x1 = x.clone().requires_grad_()
+        x2 = x.clone().to_mkldnn().requires_grad_()
+        m1 = torch.nn.PReLU(64)
+        m2 = mkldnn_utils.to_mkldnn(copy.deepcopy(m1))
+        y1 = m1(x1)
+        y2 = m2(x2)
+        y1.backward(d)
+        y2.backward(d.to_mkldnn())
+        self.assertEqual(y1, y2.to_dense())
+        self.assertEqual(x1.grad, x2.grad.to_dense())
+
+    @unittest.skipIf(IS_WINDOWS, "Limit support for bf16 path")
+    def test_prelu_bf16_base(self):
+        x = torch.randn((16, 64, 112, 112), dtype=torch.float32)
+        x_bf16 = x.bfloat16()
+        m = mkldnn_utils.to_mkldnn(torch.nn.PReLU())
+        if has_bf16_support():
+            y = m(x.to_mkldnn()).to_dense()
+            y_bf16 = m(x_bf16.to_mkldnn()).to_dense(torch.float32)
+            self.assertEqual(y, y_bf16, atol=1e-1, rtol=1e-3)
+        else:
+            msg = r"bf16 path needs the cpu support avx512bw, avx512vl and avx512dq"
+            self.assertRaisesRegex(RuntimeError,
+                                   msg,
+                                   lambda: m(x_bf16.to_mkldnn()))
+
     def _test_max_pool_base(self, dim, input):
         pool_module = {2: torch.nn.MaxPool2d, 3: torch.nn.MaxPool3d}
         for stride in [1, 2, 3]:
