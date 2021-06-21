@@ -354,34 +354,29 @@ class TestMkldnn(TestCase):
     def test_relu_inplace_bf16(self):
         self._test_relu_bf16_base("relu_")
 
-    def test_prelu(self):
-        x = torch.randn((16, 64, 112, 112), dtype=torch.float32)
-        d = torch.randn((16, 64, 112, 112), dtype=torch.float32)
-
-        x1 = x.clone()
-        x2 = x.clone().to_mkldnn()
-        m1 = torch.nn.PReLU()
-        m2 = mkldnn_utils.to_mkldnn(copy.deepcopy(m1))
-        y1 = m1(x1)
-        y2 = m2(x2)
-        y1.backward(d)
-        y2.backward(d.to_mkldnn())
-        self.assertEqual(y1, y2.to_dense())
-        self.assertEqual(x1.grad, x2.grad.to_dense())
+    def _test_prelu_base(self, size, num_channels):
+        x = torch.randn(size, dtype=torch.float32)
+        d = torch.randn(size, dtype=torch.float32)
 
         x1 = x.clone().requires_grad_()
         x2 = x.clone().to_mkldnn().requires_grad_()
-        m1 = torch.nn.PReLU(64)
+        m1 = torch.nn.PReLU(num_channels)
         m2 = mkldnn_utils.to_mkldnn(copy.deepcopy(m1))
         y1 = m1(x1)
         y2 = m2(x2)
+        m1.zero_grad()
+        m2.zero_grad()
         y1.backward(d)
         y2.backward(d.to_mkldnn())
         self.assertEqual(y1, y2.to_dense())
         self.assertEqual(x1.grad, x2.grad.to_dense())
 
+    def test_prelu(self):
+        self._test_prelu_base(torch.Size([16, 64, 112, 112]), 1)
+        self._test_prelu_base(torch.Size([16, 64, 112, 112]), 64)
+
     @unittest.skipIf(IS_WINDOWS, "Limit support for bf16 path")
-    def test_prelu_bf16_base(self):
+    def _test_prelu_bf16_base(self, size, num_channels):
         x = torch.randn((16, 64, 112, 112), dtype=torch.float32)
         x_bf16 = x.bfloat16()
         m = mkldnn_utils.to_mkldnn(torch.nn.PReLU())
@@ -394,6 +389,10 @@ class TestMkldnn(TestCase):
             self.assertRaisesRegex(RuntimeError,
                                    msg,
                                    lambda: m(x_bf16.to_mkldnn()))
+
+    def test_prelu_bf16(self):
+        self._test_prelu_bf16_base(torch.Size([16, 64, 112, 112]), 1)
+        self._test_prelu_bf16_base(torch.Size([16, 64, 112, 112]), 64)
 
     def _test_max_pool_base(self, dim, input):
         pool_module = {2: torch.nn.MaxPool2d, 3: torch.nn.MaxPool3d}
