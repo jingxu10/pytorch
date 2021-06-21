@@ -372,8 +372,15 @@ class TestMkldnn(TestCase):
         self.assertEqual(x1.grad, x2.grad.to_dense())
 
     def test_prelu(self):
+        self._test_prelu_base(torch.Size([16]), 1)
+        self._test_prelu_base(torch.Size([16, 64]), 1)
+        self._test_prelu_base(torch.Size([16, 64]), 64)
+        self._test_prelu_base(torch.Size([16, 64, 112]), 1)
+        self._test_prelu_base(torch.Size([16, 64, 112]), 64)
         self._test_prelu_base(torch.Size([16, 64, 112, 112]), 1)
         self._test_prelu_base(torch.Size([16, 64, 112, 112]), 64)
+        self._test_prelu_base(torch.Size([16, 64, 112, 112, 112]), 1)
+        self._test_prelu_base(torch.Size([16, 64, 112, 112, 112]), 64)
 
     @unittest.skipIf(IS_WINDOWS, "Limit support for bf16 path")
     def _test_prelu_bf16_base(self, size, num_channels):
@@ -391,8 +398,13 @@ class TestMkldnn(TestCase):
                                    lambda: m(x_bf16.to_mkldnn()))
 
     def test_prelu_bf16(self):
-        self._test_prelu_bf16_base(torch.Size([16, 64, 112, 112]), 1)
-        self._test_prelu_bf16_base(torch.Size([16, 64, 112, 112]), 64)
+        self._test_prelu_bf16_base(torch.Size([16]), 1)
+        self._test_prelu_bf16_base(torch.Size([16, 64]), 1)
+        self._test_prelu_bf16_base(torch.Size([16, 64]), 64)
+        self._test_prelu_bf16_base(torch.Size([16, 64, 112]), 1)
+        self._test_prelu_bf16_base(torch.Size([16, 64, 112]), 64)
+        self._test_prelu_bf16_base(torch.Size([16, 64, 112, 112, 112]), 1)
+        self._test_prelu_bf16_base(torch.Size([16, 64, 112, 112, 112]), 64)
 
     def _test_max_pool_base(self, dim, input):
         pool_module = {2: torch.nn.MaxPool2d, 3: torch.nn.MaxPool3d}
