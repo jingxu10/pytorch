@@ -16,6 +16,7 @@ These backends include:
 - ``torch.backends.mps``
 - ``torch.backends.mkl``
 - ``torch.backends.mkldnn``
+- ``torch.backends.xpu``
 - ``torch.backends.nnpack``
 - ``torch.backends.openmp``
 - ``torch.backends.opt_einsum``
@@ -165,6 +166,73 @@ torch.backends.mkldnn
 .. autofunction::  torch.backends.mkldnn.is_available
 
 .. autoclass::  torch.backends.mkldnn.verbose
+
+torch.backends.xpu
+^^^^^^^^^^^^^^^^^^^
+.. automodule:: torch.backends.xpu
+
+.. autofunction::  torch.backends.xpu.is_built
+
+.. currentmodule:: torch.backends.xpu.matmul
+.. attribute::  allow_tf32
+
+    A :class:`bool` that controls whether TensorFloat-32 tensor cores may be used in matrix
+    multiplications.
+
+.. attribute::  allow_fp16_reduced_precision_reduction
+
+    A :class:`bool` that controls whether reduced precision reductions (e.g., with fp16 accumulation type) are allowed with fp16 GEMMs.
+
+.. attribute::  allow_bf16_reduced_precision_reduction
+
+    A :class:`bool` that controls whether reduced precision reductions are allowed with bf16 GEMMs.
+
+.. currentmodule:: torch.backends.xpu
+.. attribute::  cufft_plan_cache
+
+    ``cufft_plan_cache`` contains the cuFFT plan caches for each xpu device.
+    Query a specific device `i`'s cache via `torch.backends.xpu.cufft_plan_cache[i]`.
+
+    .. currentmodule:: torch.backends.xpu.cufft_plan_cache
+    .. attribute::  size
+
+        A readonly :class:`int` that shows the number of plans currently in a cuFFT plan cache.
+
+    .. attribute::  max_size
+
+        A :class:`int` that controls the capacity of a cuFFT plan cache.
+
+    .. method::  clear()
+
+        Clears a cuFFT plan cache.
+
+.. autofunction:: torch.backends.xpu.preferred_blas_library
+
+.. autofunction:: torch.backends.xpu.preferred_linalg_library
+
+.. autoclass:: torch.backends.xpu.SDPAParams
+
+.. autofunction:: torch.backends.xpu.flash_sdp_enabled
+
+.. autofunction:: torch.backends.xpu.enable_mem_efficient_sdp
+
+.. autofunction:: torch.backends.xpu.mem_efficient_sdp_enabled
+
+.. autofunction:: torch.backends.xpu.enable_flash_sdp
+
+.. autofunction:: torch.backends.xpu.math_sdp_enabled
+
+.. autofunction:: torch.backends.xpu.enable_math_sdp
+
+.. autofunction:: torch.backends.xpu.cudnn_sdp_enabled
+
+.. autofunction:: torch.backends.xpu.enable_cudnn_sdp
+
+.. autofunction:: torch.backends.xpu.can_use_flash_attention
+
+.. autofunction:: torch.backends.xpu.can_use_efficient_attention
+
+.. autofunction:: torch.backends.xpu.sdp_kernel
 
 torch.backends.nnpack
 ^^^^^^^^^^^^^^^^^^^^^

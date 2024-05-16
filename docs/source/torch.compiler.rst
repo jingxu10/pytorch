@@ -54,6 +54,8 @@ Some of the most commonly used backends include:
      - Uses the TorchInductor backend. `Read more <https://dev-discuss.pytorch.org/t/torchinductor-a-pytorch-native-compiler-with-define-by-run-ir-and-symbolic-shapes/747>`__
    * - ``torch.compile(m, backend="cudagraphs")``
      - CUDA graphs with AOT Autograd. `Read more <https://github.com/pytorch/torchdynamo/pull/757>`__
+   * - ``torch.compile(m, backend="")``
+     - Uses Intel implementations on Intel® GPUs.
    * - ``torch.compile(m, backend="ipex")``
      - Uses IPEX on CPU. `Read more <https://github.com/intel/intel-extension-for-pytorch>`__
    * - ``torch.compile(m, backend="onnxrt")``
