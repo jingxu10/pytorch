@@ -19,7 +19,11 @@ are much faster in ``lower_precision_fp``. Other ops, like reductions, often req
 range of ``float32``.  Mixed precision tries to match each op to its appropriate datatype.
 
 Ordinarily, "automatic mixed precision training" with datatype of ``torch.float16`` uses :class:`torch.autocast` and
+<<<<<<< HEAD
 :class:`torch.amp.GradScaler` together, as shown in the :ref:`CUDA Automatic Mixed Precision examples<amp-examples>`
+=======
+:class:`torch.amp.GradScaler`, as shown in the :ref:`CUDA Automatic Mixed Precision examples<amp-examples>`
+>>>>>>> a7f24859514 (update amp.rst for xpu)
 and `CUDA Automatic Mixed Precision recipe <https://pytorch.org/tutorials/recipes/recipes/amp_recipe.html>`_.
 However, :class:`torch.autocast` and :class:`torch.GradScaler` are modular, and may be used separately if desired.
 As shown in the CPU example section of :class:`torch.autocast`, "automatic mixed precision training/inference" on CPU with
@@ -29,9 +33,7 @@ datatype of ``torch.bfloat16`` only uses :class:`torch.autocast`.
     ``torch.cuda.amp.autocast(args...)`` and ``torch.cpu.amp.autocast(args...)`` will be deprecated. Please use ``torch.autocast("cuda", args...)`` or ``torch.autocast("cpu", args...)`` instead.
     ``torch.cuda.amp.GradScaler(args...)`` and ``torch.cpu.amp.GradScaler(args...)`` will be deprecated. Please use ``torch.GradScaler("cuda", args...)`` or ``torch.GradScaler("cpu", args...)`` instead.
 
-For XPU, ``torch.xpu.amp.autocast(args...)`` is not available.
-
-:class:`torch.autocast` and :class:`torch.cpu.amp.autocast` are new in version `1.10`.
+:class:`torch.autocast` are new in version `1.10`. :class:`torch.cpu.amp.autocast` and :class:`torch.cuda.amp.autocast` will be deprecated. 
 
 .. contents:: :local:
 
@@ -271,11 +273,11 @@ Ops not listed below do not go through autocasting.  They run in the type
 defined by their inputs.  However, autocasting may still change the type
 in which unlisted ops run if they're downstream from autocasted ops.
 
-If an op is unlisted, we assume it's numerically stable in ``float16``.
-If you believe an unlisted op is numerically unstable in ``float16``,
+If an op is unlisted, we assume it's numerically stable in ``bfloat16``.
+If you believe an unlisted op is numerically unstable in ``bfloat16``,
 please file an issue.
 
-XPU Ops that can autocast to ``float16``
+XPU Ops that can autocast to ``bfloat16``
 """"""""""""""""""""""""""""""""""""""""
 
 ``__matmul__``,
@@ -361,7 +363,7 @@ XPU Ops that promote to the widest input type
 """""""""""""""""""""""""""""""""""""""""""""
 These ops don't require a particular dtype for stability, but take multiple inputs
 and require that the inputs' dtypes match.  If all of the inputs are
-``float16``, the op runs in ``float16``.  If any of the inputs is ``float32``,
+``bfloat16``, the op runs in ``bfloat16``.  If any of the inputs is ``float32``,
 autocast casts all inputs to ``float32`` and runs the op in ``float32``.
 
 ``addcdiv``,
@@ -376,15 +378,15 @@ autocast casts all inputs to ``float32`` and runs the op in ``float32``.
 ``tensordot``
 
 Some ops not listed here (e.g., binary ops like ``add``) natively promote
-inputs without autocasting's intervention.  If inputs are a mixture of ``float16``
+inputs without autocasting's intervention.  If inputs are a mixture of ``bfloat16``
 and ``float32``, these ops run in ``float32`` and produce ``float32`` output,
 regardless of whether autocast is enabled.
 
 Prefer ``binary_cross_entropy_with_logits`` over ``binary_cross_entropy``
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 The backward passes of :func:`torch.nn.functional.binary_cross_entropy` (and :mod:`torch.nn.BCELoss`, which wraps it)
-can produce gradients that aren't representable in ``float16``.  In autocast-enabled regions, the forward input
-may be ``float16``, which means the backward gradient must be representable in ``float16`` (autocasting ``float16``
+can produce gradients that aren't representable in ``bfloat16``.  In autocast-enabled regions, the forward input
+may be ``bfloat16``, which means the backward gradient must be representable in ``bfloat16`` (autocasting ``bfloat16``
 forward inputs to ``float32`` doesn't help, because that cast must be reversed in backward).
 Therefore, ``binary_cross_entropy`` and ``BCELoss`` raise an error in autocast-enabled regions.
 
