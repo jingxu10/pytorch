@@ -1,22 +1,22 @@
-.. _amp-examples:
+.. _amp-examples-xpu:
 
-CUDA Automatic Mixed Precision examples
+XPU Automatic Mixed Precision examples
 =======================================
 
-.. currentmodule:: torch.cuda.amp
+.. currentmodule:: torch.xpu.amp
 
 Ordinarily, "automatic mixed precision training" means training with
-:class:`torch.autocast` and :class:`torch.cuda.amp.GradScaler` together.
+:class:`torch.autocast` and :class:`torch.xpu.amp.GradScaler` together.
 
 Instances of :class:`torch.autocast` enable autocasting for chosen regions.
 Autocasting automatically chooses the precision for GPU operations to improve performance
 while maintaining accuracy.
 
-Instances of :class:`torch.cuda.amp.GradScaler` help perform the steps of
+Instances of :class:`torch.xpu.amp.GradScaler` help perform the steps of
 gradient scaling conveniently.  Gradient scaling improves convergence for networks with ``float16``
 gradients by minimizing gradient underflow, as explained :ref:`here<gradient-scaling>`.
 
-:class:`torch.autocast` and :class:`torch.cuda.amp.GradScaler` are modular.
+:class:`torch.autocast` and :class:`torch.xpu.amp.GradScaler` are modular.
 In the samples below, each is used as its individual documentation suggests.
 
 (Samples here are illustrative.  See the
@@ -31,7 +31,7 @@ Typical Mixed Precision Training
 ::
 
     # Creates model and optimizer in default precision
-    model = Net().cuda()
+    model = Net().xpu()
     optimizer = optim.SGD(model.parameters(), ...)
 
     # Creates a GradScaler once at the beginning of training.
@@ -42,7 +42,7 @@ Typical Mixed Precision Training
             optimizer.zero_grad()
 
             # Runs the forward pass with autocasting.
-            with autocast(device_type='cuda', dtype=torch.float16):
+            with autocast(device_type='xpu', dtype=torch.float16):
                 output = model(input)
                 loss = loss_fn(output, target)
 
@@ -59,7 +59,7 @@ Typical Mixed Precision Training
             # Updates the scale for next iteration.
             scaler.update()
 
-.. _working-with-unscaled-gradients:
+.. _working-with-unscaled-gradients-xpu:
 
 Working with Unscaled Gradients
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -87,7 +87,7 @@ Calling ``scaler.unscale_(optimizer)`` before clipping enables you to clip unsca
     for epoch in epochs:
         for input, target in data:
             optimizer.zero_grad()
-            with autocast(device_type='cuda', dtype=torch.float16):
+            with autocast(device_type='xpu', dtype=torch.float16):
                 output = model(input)
                 loss = loss_fn(output, target)
             scaler.scale(loss).backward()
@@ -109,7 +109,7 @@ Calling ``scaler.unscale_(optimizer)`` before clipping enables you to clip unsca
 this iteration, so ``scaler.step(optimizer)`` knows not to redundantly unscale gradients before
 (internally) calling ``optimizer.step()``.
 
-.. currentmodule:: torch.cuda.amp.GradScaler
+.. currentmodule:: torch.xpu.amp.GradScaler
 
 .. warning::
     :meth:`unscale_<unscale_>` should only be called once per optimizer per :meth:`step<step>` call,
@@ -140,7 +140,7 @@ where you called :meth:`step<step>` for a full effective batch::
 
     for epoch in epochs:
         for i, (input, target) in enumerate(data):
-            with autocast(device_type='cuda', dtype=torch.float16):
+            with autocast(device_type='xpu', dtype=torch.float16):
                 output = model(input)
                 loss = loss_fn(output, target)
                 loss = loss / iters_to_accumulate
@@ -155,7 +155,7 @@ where you called :meth:`step<step>` for a full effective batch::
                 scaler.update()
                 optimizer.zero_grad()
 
-.. currentmodule:: torch.cuda.amp
+.. currentmodule:: torch.xpu.amp
 
 Gradient penalty
 ----------------
@@ -205,7 +205,7 @@ Here's how that looks for the same L2 penalty::
     for epoch in epochs:
         for input, target in data:
             optimizer.zero_grad()
-            with autocast(device_type='cuda', dtype=torch.float16):
+            with autocast(device_type='xpu', dtype=torch.float16):
                 output = model(input)
                 loss = loss_fn(output, target)
 
@@ -220,7 +220,7 @@ Here's how that looks for the same L2 penalty::
             grad_params = [p * inv_scale for p in scaled_grad_params]
 
             # Computes the penalty term and adds it to the loss
-            with autocast(device_type='cuda', dtype=torch.float16):
+            with autocast(device_type='xpu', dtype=torch.float16):
                 grad_norm = 0
                 for grad in grad_params:
                     grad_norm += grad.pow(2).sum()
@@ -241,7 +241,7 @@ Here's how that looks for the same L2 penalty::
 Working with Multiple Models, Losses, and Optimizers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. currentmodule:: torch.cuda.amp.GradScaler
+.. currentmodule:: torch.xpu.amp.GradScaler
 
 If your network has multiple losses, you must call :meth:`scaler.scale<scale>` on each of them individually.
 If your network has multiple optimizers, you may call :meth:`scaler.unscale_<unscale_>` on any of them individually,
@@ -250,13 +250,13 @@ and you must call :meth:`scaler.step<step>` on each of them individually.
 However, :meth:`scaler.update<update>` should only be called once,
 after all optimizers used this iteration have been stepped::
 
-    scaler = torch.cuda.amp.GradScaler()
+    scaler = torch.xpu.amp.GradScaler()
 
     for epoch in epochs:
         for input, target in data:
             optimizer0.zero_grad()
             optimizer1.zero_grad()
-            with autocast(device_type='cuda', dtype=torch.float16):
+            with autocast(device_type='xpu', dtype=torch.float16):
                 output0 = model0(input)
                 output1 = model1(input)
                 loss0 = loss_fn(2 * output0 + 3 * output1, target)
@@ -282,16 +282,16 @@ while the other one does not.  Since step skipping occurs rarely (every several 
 this should not impede convergence.  If you observe poor convergence after adding gradient scaling
 to a multiple-optimizer model, please report a bug.
 
-.. currentmodule:: torch.cuda.amp
+.. currentmodule:: torch.xpu.amp
 
-.. _amp-multigpu:
+.. _amp-multigpu-xpu:
 
 Working with Multiple GPUs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The issues described here only affect :class:`autocast`.  :class:`GradScaler`\ 's usage is unchanged.
 
-.. _amp-dataparallel:
+.. _amp-dataparallel-xpu:
 
 DataParallel in a single process
 --------------------------------
@@ -303,7 +303,7 @@ The autocast state is propagated in each one and the following will work::
     dp_model = nn.DataParallel(model)
 
     # Sets autocast in the main thread
-    with autocast(device_type='cuda', dtype=torch.float16):
+    with autocast(device_type='xpu', dtype=torch.float16):
         # dp_model's internal threads will autocast.
         output = dp_model(input)
         # loss_fn also autocast
@@ -320,10 +320,10 @@ DistributedDataParallel, multiple GPUs per process
 --------------------------------------------------
 
 Here :class:`torch.nn.parallel.DistributedDataParallel` may spawn a side thread to run the forward pass on each
-device, like :class:`torch.nn.DataParallel`.  :ref:`The fix is the same<amp-dataparallel>`:
+device, like :class:`torch.nn.DataParallel`.  :ref:`The fix is the same<amp-dataparallel-xpu>`:
 apply autocast as part of your model's ``forward`` method to ensure it's enabled in side threads.
 
-.. _amp-custom-examples:
+.. _amp-custom-examples-xpu:
 
 Autocast and Custom Autograd Functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -335,19 +335,19 @@ autocast compatibility if any function
 * takes multiple floating-point Tensor inputs,
 * wraps any autocastable op (see the :ref:`Autocast Op Reference<autocast-op-reference>`), or
 * requires a particular ``dtype`` (for example, if it wraps
-  `CUDA extensions <https://pytorch.org/tutorials/advanced/cpp_extension.html>`_
+  `XPU extensions <https://pytorch.org/tutorials/advanced/cpp_extension.html>`_
   that were only compiled for ``dtype``).
 
 In all cases, if you're importing the function and can't alter its definition, a safe fallback
 is to disable autocast and force execution in ``float32`` ( or ``dtype``) at any points of use where errors occur::
 
-    with autocast(device_type='cuda', dtype=torch.float16):
+    with autocast(device_type='xpu', dtype=torch.float16):
         ...
-        with autocast(device_type='cuda', dtype=torch.float16, enabled=False):
+        with autocast(device_type='xpu', dtype=torch.float16, enabled=False):
             output = imported_function(input1.float(), input2.float())
 
 If you're the function's author (or can alter its definition) a better solution is to use the
-:func:`torch.cuda.amp.custom_fwd` and :func:`torch.cuda.amp.custom_bwd` decorators as shown in
+:func:`torch.xpu.amp.custom_fwd` and :func:`torch.xpu.amp.custom_bwd` decorators as shown in
 the relevant case below.
 
 Functions with multiple inputs or autocastable ops
@@ -373,7 +373,7 @@ Now ``MyMM`` can be invoked anywhere, without disabling autocast or manually cas
 
     mymm = MyMM.apply
 
-    with autocast(device_type='cuda', dtype=torch.float16):
+    with autocast(device_type='xpu', dtype=torch.float16):
         output = mymm(input1, input2)
 
 Functions that need a particular ``dtype``
@@ -382,7 +382,7 @@ Functions that need a particular ``dtype``
 Consider a custom function that requires ``torch.float32`` inputs.
 Apply :func:`custom_fwd(cast_inputs=torch.float32)<custom_fwd>` to ``forward``
 and :func:`custom_bwd<custom_bwd>` (with no arguments) to ``backward``.
-If ``forward`` runs in an autocast-enabled region, the decorators cast floating-point CUDA Tensor
+If ``forward`` runs in an autocast-enabled region, the decorators cast floating-point XPU Tensor
 inputs to ``float32``, and locally disable autocast during ``forward`` and ``backward``::
 
     class MyFloat32Func(torch.autograd.Function):
@@ -401,6 +401,6 @@ Now ``MyFloat32Func`` can be invoked anywhere, without manually disabling autoca
 
     func = MyFloat32Func.apply
 
-    with autocast(device_type='cuda', dtype=torch.float16):
+    with autocast(device_type='xpu', dtype=torch.float16):
         # func will run in float32, regardless of the surrounding autocast state
         output = func(input)

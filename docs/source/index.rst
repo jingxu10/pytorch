@@ -66,6 +66,7 @@ Features described in this documentation are classified by release status:
    torch.library <library>
    cpu
    cuda
+   xpu
    torch.cuda.memory <torch_cuda_memory>
    mps
    xpu
