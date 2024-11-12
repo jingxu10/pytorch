@@ -24,6 +24,7 @@ SystemEnv = namedtuple('SystemEnv', [
     'torch_version',
     'is_debug_build',
     'cuda_compiled_version',
+    'xpu_compiled_version',
     'gcc_version',
     'clang_version',
     'cmake_version',
@@ -264,28 +265,24 @@ def get_pkg_version(run_lambda, pkg):
                 break
         if mgr_name != "":
             cmd = ""
+            # 0: centos/suse
+            # 1: ubuntu
+            pkg_names = {0: {"intel_opencl": "intel-opencl",
+                             "level_zero": "level-zero"},
+                         1: {"intel_opencl": "intel-opencl-icd",
+                             "level_zero": "libze1"}}
             if mgr_name in ["dnf", "yum", "zypper"]:
-                pkg_name = ""
-                if pkg == "intel_opencl":
-                    pkg_name = "intel-opencl"
-                if pkg == "level_zero":
-                    pkg_name = "intel-level-zero-gpu"
-                if pkg_name != "":
-                    if mgr_name in ["dnf", "yum"]:
-                        index = 1
-                        cmd = f"{mgr_name} list | grep {pkg_name}"
-                    if mgr_name in ["zypper"]:
-                        index = 2
-                        cmd = f"{mgr_name} info {pkg_name} | grep Version"
+                pkg_name = pkg_names[0][pkg]
+                if mgr_name in ["dnf", "yum"]:
+                    index = 1
+                    cmd = f"{mgr_name} list | grep {pkg_name}"
+                if mgr_name in ["zypper"]:
+                    index = 2
+                    cmd = f"{mgr_name} info {pkg_name} | grep Version"
             if mgr_name == "dpkg":
                 index = 2
-                pkg_name = ""
-                if pkg == "intel_opencl":
-                    pkg_name = "intel-opencl-icd"
-                if pkg == "level_zero":
-                    pkg_name = "intel-level-zero-gpu"
-                if pkg_name != "":
-                    cmd = f"{mgr_name} -l | grep {pkg_name}"
+                pkg_name = pkg_names[1][pkg]
+                cmd = f"{mgr_name} -l | grep {pkg_name}"
             if cmd != "":
                 ret = run_and_read_all(run_lambda, cmd)
     lst = []
@@ -635,6 +632,9 @@ def get_env_info():
         cuda_available_str = str(torch.cuda.is_available())
         cuda_version_str = torch.version.cuda
         xpu_available_str = str(torch.xpu.is_available())
+        xpu_version_str = 'N/A'
+        if torch.xpu.is_available():
+            xpu_version_str = torch.version.xpu
         if not hasattr(torch.version, 'hip') or torch.version.hip is None:  # cuda version
             hip_compiled_version = hip_runtime_version = miopen_runtime_version = 'N/A'
         else:  # HIP version
@@ -646,9 +646,10 @@ def get_env_info():
             hip_runtime_version = get_version_or_na(cfg, 'HIP Runtime')
             miopen_runtime_version = get_version_or_na(cfg, 'MIOpen')
             cuda_version_str = 'N/A'
+            xpu_version_str = 'N/A'
             hip_compiled_version = torch.version.hip
     else:
-        version_str = debug_mode_str = cuda_available_str = cuda_version_str = xpu_available_str = 'N/A'
+        version_str = debug_mode_str = cuda_available_str = cuda_version_str = xpu_available_str = xpu_version_str = 'N/A'
         hip_compiled_version = hip_runtime_version = miopen_runtime_version = 'N/A'
 
     sys_version = sys.version.replace("\n", " ")
@@ -668,6 +669,7 @@ def get_env_info():
         nvidia_driver_version=get_nvidia_driver_version(run_lambda),
         cudnn_version=get_cudnn_version(run_lambda),
         is_xpu_available=xpu_available_str,
+        xpu_compiled_version=xpu_version_str,
         intel_gpu_driver_version='\n{}'.format(get_intel_gpu_driver_version(run_lambda)),
         intel_gpu_onboard='\n{}'.format(get_intel_gpu_onboard(run_lambda)),
         intel_gpu_detected='\n{}'.format(get_intel_gpu_detected(run_lambda)),
@@ -692,6 +694,7 @@ PyTorch version: {torch_version}
 Is debug build: {is_debug_build}
 CUDA used to build PyTorch: {cuda_compiled_version}
 ROCM used to build PyTorch: {hip_compiled_version}
+XPU  used to build PyTorch: {xpu_compiled_version}
 
 OS: {os}
 GCC version: {gcc_version}
